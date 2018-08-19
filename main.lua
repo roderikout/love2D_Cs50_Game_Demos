@@ -20,6 +20,8 @@
     modern systems.
 ]]
 
+-- Changes by Roderikout since 19/08/2018
+
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 
