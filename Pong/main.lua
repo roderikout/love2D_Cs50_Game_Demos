@@ -30,6 +30,9 @@ WINDOW_HEIGHT = 720
 VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
+-- speed at which we will move our paddle: multiplied by dt in update
+PADDLE_SPEED = 200
+
 --[[
     Runs when the game first starts up, only once; used to initialize the game.
 ]]
@@ -40,6 +43,9 @@ function love.load()
 
     -- more "retro-looking" font object we can use for any text
     smallFont = love.graphics.newFont('font.ttf', 8)
+
+    -- larger font for drawing the score on the screen
+    scoreFont = love.graphics.newFont('font.ttf', 32)
 
     --set Love2D active font to smallFont
     love.graphics.setFont(smallFont)
@@ -52,7 +58,38 @@ function love.load()
         resizable = false,
         vsync = true
         })
+
+    -- initialize score variables, used for rendering on the screen and keeping
+    -- track of the winner
+    player1Score = 0
+    player2Score = 0
+
+    -- paddle positions on the Y axis (they can only move up or down)
+    player1Y = 30
+    player2Y = VIRTUAL_HEIGHT - 50
 end
+
+
+function love.update(dt)
+    --player 1 movement
+    if love.keyboard.isDown('w') then
+        --add negative paddle speed to current Y scaled by DT
+        player1Y = player1Y + -PADDLE_SPEED * dt
+    elseif love.keyboard.isDown('s') then
+        --add positive paddle speed to current Y scaled by DT
+        player1Y = player1Y + PADDLE_SPEED * dt
+    end
+
+    --player 2 movement
+    if love.keyboard.isDown('up') then 
+        --add negative paddle speed to current Y scaled by DT
+        player2Y = player2Y + -PADDLE_SPEED * dt 
+    elseif love.keyboard.isDown('down') then 
+        player2Y = player2Y + PADDLE_SPEED * dt 
+    end
+end
+
+
 
 --[[
     Keyboard handling, called by LÖVE2D each frame; 
@@ -79,12 +116,18 @@ function love.draw()
 
     -- condensed onto one line from las example
     -- note we are now using virtual width top of the screen for text placement
+    love.graphics.setFont(smallFont)
     love.graphics.printf('Hello Pong!', 0, 20, VIRTUAL_WIDTH, 'center')
+    
+    --draw score on the left and right center of the screen
+    --need to switch font to draw before actually printing
+    love.graphics.setFont(scoreFont)
+    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, VIRTUAL_HEIGHT / 3)
+    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30, VIRTUAL_HEIGHT / 3) 
 
-    --
+
     --paddles are simply rectangles we draw on the screen at certain points,
     --as is the ball
-    --
 
     --render first paddle (left side)
     love.graphics.rectangle('fill', 10, 30, 5, 20)
