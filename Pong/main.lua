@@ -24,6 +24,21 @@
 -- https://github.com/Ulydev/push
 push = require 'push'
 
+--the "Class" library we're using will allow us to represent anything in
+--our game as code, rather than keeping track o many disparate variables 
+--and methods
+--
+--https://github.com/vrld/hump/blob/master/class.lua
+Class = require 'class'
+
+--our Paddle class, which stores position and dimensions for each paddle
+--and the logic for rendering them
+require 'Paddle'
+
+--our Ball class, which isn't much different than a Paddle structure-wise
+--but which will mechanicallly function very differently
+require 'Ball'
+
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 
@@ -69,16 +84,11 @@ function love.load()
     player2Score = 0
 
     -- paddle positions on the Y axis (they can only move up or down)
-    player1Y = 30
-    player2Y = VIRTUAL_HEIGHT - 50
+    player1= Paddle(10,30, 5, 20)
+    player2= Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
 
     -- velocity and position variables for our ball when play starts
-    ballX = VIRTUAL_WIDTH / 2 - 2
-    ballY = VIRTUAL_HEIGHT / 2 - 2
-
-    -- math.random returns a random value between the left and right number
-    ballDX = math.random(2) == 1 and 100 or -100
-    ballDY = math.random(-50,50)
+    ball = Ball(VIRTUAL_WIDTH / 2 - 2. VIRTUAL_HEIGHT / 2 - 2, 4, 4)
 
     --game state variable used to transition between different parts of the game
     --(used for beginning, menus, main game, high score list, etc.)
@@ -94,32 +104,30 @@ end
 function love.update(dt)
     --player 1 movement
     if love.keyboard.isDown('w') then
-        --add negative paddle speed to current Y scaled by DT
-        -- now, we clamp our position between the bounds of the screen
-        -- math.max returns the greater of two values; 0 and player Y 
-        -- will ensure we don't go above it
-        player1Y = math.max(0, player1Y + -PADDLE_SPEED * dt)
+        player1.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('s') then
-        --add positive paddle speed to current Y scaled by DT
-        -- math.min returns the lesser of two values; bottom of the edge minus paddle size
-        -- and player Y will ensure we don't go below it
-        player1Y = math.min(VIRTUAL_HEIGHT - 20, player1Y + PADDLE_SPEED * dt)
+       player1.dy = PADDLE_SPEED
+    else
+        player1.dy = 0
     end
 
     --player 2 movement
     if love.keyboard.isDown('up') then 
-        --add negative paddle speed to current Y scaled by DT
-        player2Y = math.max(0, player2Y + -PADDLE_SPEED * dt) 
+        player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then 
-        player2Y = math.min(VIRTUAL_HEIGHT - 20, player2Y + PADDLE_SPEED * dt) 
+        plaeyr2.dy = PADDLE_SPEED
+    else
+        player2.dy = 0
     end
 
     --update our ball based on its DX and DY only if we're in play state;
     --scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then 
-        ballX = ballX + ballDX * dt
-        ballY = ballY + ballDY * dt
+       ball:update(dt)
     end
+
+    player1:update(dt)
+    player2:update(dt)
 end
 
 --[[
@@ -140,8 +148,7 @@ function love.keypressed(key)
             gameState = 'start'
 
             -- start ball's position in the middle of the screen
-            ballX = VIRTUAL_WIDTH / 2 - 2
-            ballY = VIRTUAL_HEIGHT / 2 - 2
+            ball:reset()
 
             --given ball's x and y velocity a random starting value
             -- the and/or patter here is Lua's way to accomplishing a ternary like
@@ -181,13 +188,13 @@ function love.draw()
     --as is the ball
 
     --render first paddle (left side)
-    love.graphics.rectangle('fill', 10, player1Y, 5, 20)
+    player1:render()
 
     --render second paddle (right side)
-    love.graphics.rectangle('fill', VIRTUAL_WIDTH - 10,player2Y, 5, 20)
+    player2:render()
 
     --render ball (center)
-    love.graphics.rectangle('fill', ballX, ballY, 4, 4)
+    ball:render()
 
     -- end rendering at virtual resolution
     push:apply('end')
