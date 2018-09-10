@@ -88,7 +88,7 @@ function love.load()
     player2= Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
 
     -- velocity and position variables for our ball when play starts
-    ball = Ball(VIRTUAL_WIDTH / 2 - 2. VIRTUAL_HEIGHT / 2 - 2, 4, 4)
+    ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
 
     --game state variable used to transition between different parts of the game
     --(used for beginning, menus, main game, high score list, etc.)
@@ -115,7 +115,7 @@ function love.update(dt)
     if love.keyboard.isDown('up') then 
         player2.dy = -PADDLE_SPEED
     elseif love.keyboard.isDown('down') then 
-        plaeyr2.dy = PADDLE_SPEED
+        player2.dy = PADDLE_SPEED
     else
         player2.dy = 0
     end
