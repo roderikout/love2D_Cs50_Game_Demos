@@ -74,6 +74,12 @@ function love.load()
     --set Love2D active font to smallFont
     love.graphics.setFont(smallFont)
 
+    sounds = {
+        ['paddle_hit'] = love.audio.newSource('sounds/paddle_hit.wav', 'static'), 
+        ['score'] = love.audio.newSource('sounds/score.wav', 'static'),
+        ['wall_hit'] = love.audio.newSource('sounds/wall_hit.wav', 'static')
+    }
+
     -- initialize our virtual resolution, which will be rendered within our
     -- actual window no matter its dimensions; replaces our love.window.setMode call
     -- from the last example
@@ -137,6 +143,8 @@ function love.update(dt)
             else
                 ball.dy = math.random(10, 150)
             end
+
+            sounds['paddle_hit']:play()
         end
 
         if ball:collides(player2) then 
@@ -149,18 +157,23 @@ function love.update(dt)
             else
                 ball.dy = math.random(10, 150)
             end
+
+            sounds['paddle_hit']:play()
         end
 
         --detect upper and lower boundary collision and reverse direction if collides
         if ball.y <= 0 then 
             ball.y = 0
             ball.dy = -ball.dy 
+
+            sounds['wall_hit']:play()
         end
 
         -- -4 to account for the ball's size
         if ball.y >= VIRTUAL_HEIGHT - 4 then 
             ball.y = VIRTUAL_HEIGHT - 4
             ball.dy = - ball.dy 
+            sounds['wall_hit']:play()
         end
 
         --if we reach the left or right edge of the screen,
@@ -169,6 +182,8 @@ function love.update(dt)
         if ball.x + 4 < 0 then 
             servingPlayer = 1
             player2Score = player2Score + 1 
+
+            sounds['score']:play()
 
             --if we've reached a score of winningPoints, the game is over; set the
             --state to done so we can show the victory message
@@ -184,6 +199,8 @@ function love.update(dt)
         if ball.x > VIRTUAL_WIDTH then
             servingPlayer = 2
             player1Score = player1Score + 1
+
+            sounds['score']:play()
 
             --if we've reached a score of winningPoints, the game is over; set the
             --state to done so we can show the victory message
