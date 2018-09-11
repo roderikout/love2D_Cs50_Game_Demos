@@ -56,6 +56,9 @@ function love.load()
     -- and graphics; try removing this function to see the difference!
     love.graphics.setDefaultFilter('nearest', 'nearest')
 
+    --set the title of our application window
+    love.window.setTitle('Pong')
+
     -- "seed" the Random Number Generator RNG so that calls to random are always random
     -- use the current time, since that will vary on startup every time
     math.randomseed(os.time())
@@ -196,6 +199,18 @@ function love.draw()
     --render ball (center)
     ball:render()
 
+    -- new function just to demostrate how to see FPS in Love2D
+    displayFPS()
+
     -- end rendering at virtual resolution
     push:apply('end')
+end
+
+--render the current FPS
+
+function displayFPS()
+    --simple FPS display across all states
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
