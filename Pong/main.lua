@@ -86,6 +86,10 @@ function love.load()
     player1Score = 0
     player2Score = 0
 
+    -- either going to be 1 or 2; whomever is scored on gets to serve the
+    -- following turn
+    servingPlayer = 1
+
     -- paddle positions on the Y axis (they can only move up or down)
     player1= Paddle(10,30, 5, 20)
     player2= Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
@@ -105,7 +109,16 @@ end
     since the last frame, which LÖVE2D supplies us.
 ]]
 function love.update(dt)
-    if gameState == 'play' then 
+    if gameState == 'serve' then 
+        -- before switching to play, initialize ball's velocity based
+        -- on player who last scored
+        ball.dy = math.random(-50, 50)
+        if servingPlayer == 1 then 
+            ball.dx = math.random(140, 200)
+        else
+            ball.dx = -math.random(140, 200)
+        end
+    elseif gameState == 'play' then 
         -- detect ball collision with paddles, reversing dx if true and
         --slightly increasing it, then altering the dy based on the position of the ball
 
@@ -144,6 +157,23 @@ function love.update(dt)
             ball.y = VIRTUAL_HEIGHT - 4
             ball.dy = - ball.dy 
         end
+    end
+
+    --if we reach the left or right edge of the screen,
+    -- go back to start and update the score
+
+    if ball.x + 4 < 0 then 
+        servingPlayer = 1
+        player2Score = player2Score + 1 
+        ball:reset()
+        gameState = 'serve'
+    end
+
+    if ball.x > VIRTUAL_WIDTH then
+        servingPlayer = 2
+        player1Score = player1Score + 1 
+        ball:reset()
+        gameState = 'serve'
     end
 
 
@@ -188,18 +218,9 @@ function love.keypressed(key)
     -- during play mode, the ball will move in a random direction
     elseif key == 'enter' or key == 'return' then 
         if gameState == 'start' then
+            gameState = 'serve'
+        elseif gameState == 'serve' then
             gameState = 'play'
-        else
-            gameState = 'start'
-
-            -- start ball's position in the middle of the screen
-            ball:reset()
-
-            --given ball's x and y velocity a random starting value
-            -- the and/or patter here is Lua's way to accomplishing a ternary like
-            -- in other programing languages like C
-            ballDX = math.random(2) == 1 and 100 or -100
-            ballDY = math.random(-50,50) * 1.5
         end
     end
 end
@@ -218,17 +239,22 @@ function love.draw()
     -- condensed onto one line from las example
     -- note we are now using virtual width top of the screen for text placement
     love.graphics.setFont(smallFont)
-    love.graphics.printf('Hello Pong!', 0, 20, VIRTUAL_WIDTH, 'center')
+
+    displayScore()
+
+    if gameState == 'start' then 
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'serve' then
+        love.graphics.setFont(smallFont)
+        love.graphics.printf('Player ' .. tostring(servingPlayer) .. "'s serve!", 
+            0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to serve!', 0, 20, VIRTUAL_WIDTH, 'center')
+    elseif gameState == 'play' then
+        -- no UI messages to display in play
+    end
     
-    --draw score on the left and right center of the screen
-    --need to switch font to draw before actually printing
-    love.graphics.setFont(scoreFont)
-    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, 
-        VIRTUAL_HEIGHT / 3)
-    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
-        VIRTUAL_HEIGHT / 3) 
-
-
     --paddles are simply rectangles we draw on the screen at certain points,
     --as is the ball
 
@@ -255,4 +281,16 @@ function displayFPS()
     love.graphics.setFont(smallFont)
     love.graphics.setColor(0, 255, 0, 255)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
+end
+
+--displays the score to the screen
+
+function displayScore()
+    -- draw score on the left and right center of the screen
+    -- need to switch font to draw before actually printing
+    love.graphics.setFont(scoreFont)
+    love.graphics.print(tostring(player1Score), VIRTUAL_WIDTH / 2 - 50, 
+        VIRTUAL_HEIGHT / 3)
+    love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
+        VIRTUAL_HEIGHT / 3)
 end
