@@ -85,7 +85,7 @@ function love.load()
     -- from the last example
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
-        resizable = false,
+        resizable = true,
         vsync = true
         })
 
@@ -114,6 +114,14 @@ function love.load()
     gameState = 'start'
 
 end
+
+--called by love2d whenever we resize the screen; here, we just want to pass in the
+--width and height to push so our virtual resolution can be resized as needed
+
+function love.resize(w, h)
+    push:resize(w, h) 
+end
+
 
 --[[
     Runs every frame, with "dt" passed in, our delta in seconds 
