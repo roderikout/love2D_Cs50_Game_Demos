@@ -101,6 +101,12 @@ function love.load()
     --set the amount of points to win
     winningPoints = 3
 
+    --set number of players, 2 by default
+    numPlayers = 2
+
+    --set the initial factor of awareness of the AI
+    aiAwareness = 0.01
+
     -- paddle positions on the Y axis (they can only move up or down)
     player1= Paddle(10,30, 5, 20)
     player2= Paddle(VIRTUAL_WIDTH - 10, VIRTUAL_HEIGHT - 30, 5, 20)
@@ -144,6 +150,7 @@ function love.update(dt)
         if ball:collides(player1) then 
             ball.dx = - ball.dx * 1.03
             ball.x = player1.x + 5
+            aiAwareness = aiAwareness * 1.5
 
             -- keep velocity going in the same direction, but randomize it
             if ball.dy < 0 then 
@@ -231,14 +238,18 @@ function love.update(dt)
     else
         player1.dy = 0
     end
-
-    --player 2 movement
-    if love.keyboard.isDown('up') then 
-        player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then 
-        player2.dy = PADDLE_SPEED
+    -- if is not against the computer
+    if numPlayers == 2 then 
+        --player 2 movement
+        if love.keyboard.isDown('up') then 
+            player2.dy = -PADDLE_SPEED
+        elseif love.keyboard.isDown('down') then 
+            player2.dy = PADDLE_SPEED
+        else
+            player2.dy = 0
+        end
     else
-        player2.dy = 0
+        aiMove();
     end
 
     --update our ball based on its DX and DY only if we're in play state;
@@ -262,6 +273,12 @@ function love.keypressed(key)
         love.event.quit()
     -- if we presw enter during the start state of the game, we'll go into play state
     -- during play mode, the ball will move in a random direction
+    elseif key == 'p' or key == 'P' then
+        if numPlayers == 2 then 
+            numPlayers = 1
+        else
+            numPlayers = 2
+        end
     elseif key == 'enter' or key == 'return' then 
         if gameState == 'start' then
             gameState = 'serve'
@@ -285,6 +302,14 @@ function love.keypressed(key)
                 servingPlayer = 1
             end
         end
+    elseif key == 'q' and gameState == 'done' then
+        gameState = 'start'
+
+        ball:reset()
+
+        --reset scores to 0
+        player1Score = 0
+        player2Score = 0
     end
 end
 
@@ -308,7 +333,9 @@ function love.draw()
     if gameState == 'start' then 
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press p to change number of players. 1 plays against the computer', 0, 20,VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press Enter to begin!', 0, 30, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf(tostring(numPlayers) .. ' Players', 0, 40, VIRTUAL_WIDTH, 'center')
     elseif gameState == 'serve' then
         love.graphics.setFont(smallFont)
         love.graphics.printf('Player ' .. tostring(servingPlayer) .. "'s serve!", 
@@ -322,6 +349,7 @@ function love.draw()
         love.graphics.printf('Player ' .. tostring(winningPlayer) .. ' wins!', 0, 10, VIRTUAL_WIDTH, 'center')
         love.graphics.setFont(smallFont)
         love.graphics.printf('Press Enter to restart!', 0, 30, VIRTUAL_WIDTH, 'center')
+        love.graphics.printf('Press q to go to initial screen!', 0, 40, VIRTUAL_WIDTH, 'center')
     end
     
     --paddles are simply rectangles we draw on the screen at certain points,
@@ -362,4 +390,22 @@ function displayScore()
         VIRTUAL_HEIGHT / 3)
     love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
         VIRTUAL_HEIGHT / 3)
+end
+
+function aiMove()
+    if ball.x > VIRTUAL_WIDTH * (0.4 - aiAwareness) then 
+        if ball.y < player2.y + player2.height / 2 then 
+            player2.dy = -PADDLE_SPEED * 0.6
+        elseif ball.y > player2.y + player2.height / 2 then 
+            player2.dy = PADDLE_SPEED * 0.6
+        end
+    else
+        if player2.y + player2.height / 2 < VIRTUAL_HEIGHT / 2 then 
+            player2.dy = PADDLE_SPEED * 0.6
+        elseif player2.y + player2.height > VIRTUAL_HEIGHT / 2 then 
+            player2.dy = -PADDLE_SPEED * 0.6
+        else
+            player2.dy = 0
+        end
+    end
 end
