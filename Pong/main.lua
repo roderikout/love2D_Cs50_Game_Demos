@@ -271,14 +271,16 @@ function love.keypressed(key)
     if key == 'escape' then 
         -- function LÖVE gives us to terminate application
         love.event.quit()
-    -- if we presw enter during the start state of the game, we'll go into play state
-    -- during play mode, the ball will move in a random direction
+    -- If we press 'q' change from 2 to 1 player and plays
+    --against the AI
     elseif key == 'p' or key == 'P' then
         if numPlayers == 2 then 
             numPlayers = 1
         else
             numPlayers = 2
         end
+    -- if we pres enter during the start state of the game, we'll go into play state
+    -- during play mode, the ball will move in a random direction
     elseif key == 'enter' or key == 'return' then 
         if gameState == 'start' then
             gameState = 'serve'
@@ -391,6 +393,11 @@ function displayScore()
     love.graphics.print(tostring(player2Score), VIRTUAL_WIDTH / 2 + 30,
         VIRTUAL_HEIGHT / 3)
 end
+
+--Pseudo AI intelligence by Roderikout. A third slower than human player. 
+--Only reacts when the ball has bounced on player's paddle and moved
+--40% of the screen. This space is reduced by aiAwareness, that grows a tiny
+--percentaje every bounce
 
 function aiMove()
     if ball.x > VIRTUAL_WIDTH * (0.4 - aiAwareness) then 
