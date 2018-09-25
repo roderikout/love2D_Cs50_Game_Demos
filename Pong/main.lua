@@ -46,6 +46,7 @@ VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
 
+
 -- speed at which we will move our paddle: multiplied by dt in update
 PADDLE_SPEED = 200
 
