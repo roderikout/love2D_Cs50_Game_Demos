@@ -45,6 +45,7 @@ WINDOW_HEIGHT = 720
 VIRTUAL_WIDTH = 432
 VIRTUAL_HEIGHT = 243
 
+
 -- speed at which we will move our paddle: multiplied by dt in update
 PADDLE_SPEED = 200
 
@@ -86,7 +87,7 @@ function love.load()
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
         fullscreen = false,
         resizable = true,
-        vsync = true
+        vsync = false
         })
 
     -- initialize score variables, used for rendering on the screen and keeping
@@ -400,7 +401,7 @@ end
 --percentaje every bounce
 
 function aiMove()
-    if ball.x > VIRTUAL_WIDTH * (0.4 - aiAwareness) then 
+    if ball.x > VIRTUAL_WIDTH * (0.4 - aiAwareness) then        
         if ball.y < player2.y + player2.height / 2 then 
             player2.dy = -PADDLE_SPEED * 0.6
         elseif ball.y > player2.y + player2.height / 2 then 

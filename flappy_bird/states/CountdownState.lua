@@ -17,6 +17,10 @@ COUNTDOWN_TIME = 0.75
 function CountdownState:init()
 	self.count = 3
 	self.timer = 0
+
+	scrolling = true
+	isPausable = false
+
 end
 
 --[[
@@ -39,5 +43,7 @@ end
 
 function CountdownState:render()
 	love.graphics.setFont(hugeFont)
-	love.graphics.printf(tostring(self.count), 0, 120, VIRTUAL_WIDTH, 'center')
+	love.graphics.printf(tostring(self.count), 0, 100, VIRTUAL_WIDTH, 'center')
+	love.graphics.setFont(mediumFont)
+	love.graphics.printf('To flap press the spacebar', 0, 180, VIRTUAL_WIDTH, 'center')
 end

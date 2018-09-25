@@ -65,7 +65,10 @@ local GROUND_SCROLL_SPEED = 60
 local BACKGROUND_LOOPING_POINT = 413
 
 -- global variable we can use to scroll the map
-local scrolling = true 
+scrolling = true 
+
+isPaused = false
+isPausable = false
 
 function love.load()
     -- initialize our nearest-neighbor filter
@@ -90,7 +93,9 @@ function love.load()
         ['explosion'] = love.audio.newSource('explosion.wav', 'static'),
         ['hurt'] = love.audio.newSource('hurt.wav', 'static'),
         ['score'] = love.audio.newSource('score.wav', 'static'),
-
+        ['pause'] = love.audio.newSource('pause.wav', 'static'),
+        ['unpause'] = love.audio.newSource('unpause.wav', 'static'),
+ 
         -- https://freesound.org/people/xsgianni/sounds/388079/
         ['music'] = love.audio.newSource('marios_way.mp3', 'static')
     }
@@ -102,7 +107,7 @@ function love.load()
 
     -- initialize our virtual resolution
     push:setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, WINDOW_WIDTH, WINDOW_HEIGHT, {
-        vsync = true,
+        vsync = false,
         fullscreen = false,
         resizable = true
 
@@ -113,7 +118,8 @@ function love.load()
         ['title'] = function() return TitleScreenState() end,
         ['countdown'] = function() return CountdownState() end,
         ['play'] = function() return PlayState() end,
-        ['score'] = function() return ScoreState() end
+        ['pause'] = function() return PauseState() end,
+        ['score'] = function() return ScoreState() end,
     }
     gStateMachine:change('title')
 
@@ -137,6 +143,25 @@ function love.keypressed(key)
     end
 end
 
+function love.keypressed(key)
+    -- add to our table of keys pressed this frame
+    love.keyboard.keysPressed[key] = true
+
+    if key == 'escape' then 
+        love.event.quit()
+    elseif (key == 'p' or key == 'P') and not isPaused and isPausable then
+        isPaused = true
+        scrolling = false
+        love.audio.pause(sounds['music'])
+        sounds['pause']:play()
+    elseif (key == 'p' or key == 'P') and isPaused and isPausable then
+        isPaused = false
+        scrolling = true
+        love.audio.play(sounds['music'])
+        sounds['unpause']:play()
+    end
+end
+
 --[[
     LÖVE2D callback fired each time a mouse button is pressed; gives us the
     X and Y of the mouse, as well as the button in question.
@@ -157,9 +182,11 @@ function love.mouse.wasPressed(button)
 end
 
 function love.update(dt)
-    backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % 
-        BACKGROUND_LOOPING_POINT
-    groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    if scrolling then
+        backgroundScroll = (backgroundScroll + BACKGROUND_SCROLL_SPEED * dt) % 
+            BACKGROUND_LOOPING_POINT
+        groundScroll = (groundScroll + GROUND_SCROLL_SPEED * dt) % VIRTUAL_WIDTH
+    end
 
     gStateMachine:update(dt)
 
@@ -172,5 +199,15 @@ function love.draw()
     gStateMachine:render()
     love.graphics.draw(ground, -groundScroll, VIRTUAL_HEIGHT - 16)
     
+    -- new function just to demostrate how to see FPS in Love2D
+    displayFPS()
+
     push:finish()
+end
+
+function displayFPS()
+    --simple FPS display across all states
+    love.graphics.setFont(smallFont)
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
 end
