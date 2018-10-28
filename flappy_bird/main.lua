@@ -67,8 +67,8 @@ local BACKGROUND_LOOPING_POINT = 413
 -- global variable we can use to scroll the map
 scrolling = true 
 
-isPaused = false
-isPausable = false
+--isPaused = false
+--isPausable = false
 
 function love.load()
     -- initialize our nearest-neighbor filter
@@ -149,16 +149,6 @@ function love.keypressed(key)
 
     if key == 'escape' then 
         love.event.quit()
-    elseif (key == 'p' or key == 'P') and not isPaused and isPausable then
-        isPaused = true
-        scrolling = false
-        love.audio.pause(sounds['music'])
-        sounds['pause']:play()
-    elseif (key == 'p' or key == 'P') and isPaused and isPausable then
-        isPaused = false
-        scrolling = true
-        love.audio.play(sounds['music'])
-        sounds['unpause']:play()
     end
 end
 

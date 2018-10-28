@@ -34,13 +34,31 @@ function PlayState:init()
 	self.lastY = -PIPE_HEIGHT + math.random(80) + 20
 
     scrolling = true
-    isPausable = true
+    --isPausable = true
+    self.paused = false
 
 end
 
 function PlayState:update(dt)
 
-    if not isPaused then
+    if self.paused then
+        if love.keyboard.wasPressed('p') or love.keyboard.wasPressed('P') then 
+            self.paused = false
+            scrolling = true
+            sounds['music']:play()
+            sounds['unpause']:play()
+        else
+            return
+        end
+    elseif love.keyboard.wasPressed('p') or love.keyboard.wasPressed('P') then
+        self.paused = true
+        scrolling = false
+        sounds['music']:pause()
+        sounds['pause']:play()
+        return
+    end
+
+    --if not isPaused then
          -- update timer for pipe spawning
     	self.timer = self.timer + dt
 
@@ -115,7 +133,7 @@ function PlayState:update(dt)
                 score = self.score
             })
         end
-    end
+    --end
 end
 
 function PlayState:render()
@@ -128,7 +146,7 @@ function PlayState:render()
 
     self.bird:render()
     
-    if isPaused then
+    if self.paused then
         love.graphics.setFont(hugeFont)
         love.graphics.printf('PAUSE', 0, 100, VIRTUAL_WIDTH, 'center')
     end
