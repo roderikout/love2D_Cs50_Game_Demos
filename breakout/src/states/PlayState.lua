@@ -52,10 +52,32 @@ function PlayState:update(dt)
     self.paddle:update(dt)
     self.ball:update(dt)
 
+    --Nuevo rebote usando tecnica de noooway
+
     if self.ball:collides(self.paddle) then
-        -- raise ball above paddle in case it goes below it, then reverse dy
-        self.ball.y = self.paddle.y - 8
-        self.ball.dy = -self.ball.dy
+        --Nuevo rebote usando tecnica de noooway
+        local ball_collides, shift_ball_x, shift_ball_y, min_shift
+        ball_collides, shift_ball_x, shift_ball_y = self.ball:collides(self.paddle)
+
+        min_shift = math.min(math.abs(shift_ball_x), math.abs(shift_ball_y))
+
+        if math.abs(shift_ball_x) == min_shift then
+            shift_ball_y = 0
+        else
+            shift_ball_x = 0
+        end
+
+
+        -- raise ball above paddle in case it goes below it, then reverse dy or the same for x and dx
+        self.ball.x = self.ball.x + shift_ball_x
+        self.ball.y = self.ball.y + shift_ball_y
+
+        if shift_ball_x ~= 0 then
+            self.ball.dx = -self.ball.dx
+        end
+        if shift_ball_y ~= 0 then
+            self.ball.dy = -self.ball.dy
+        end
 
         --
         -- tweak angle of bounce based on where it hits the paddle

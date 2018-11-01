@@ -47,8 +47,25 @@ function Ball:collides(target)
         return false
     end 
 
+    --Shift de la pelota
+    local shift_ball_x, shift_ball_y
+
+    --Shift en x
+    if (target.x + target.width / 2) < (self.x + self.width / 2) then
+        shift_ball_x = (target.x + target.width) - self.x
+    else
+        shift_ball_x = target.x - (self.x + self.width)
+    end
+
+    --Shift en y
+    if (target.y + target.height / 2) < (self.y + self.height / 2) then
+        shift_ball_y = (target.y + target.height) - self.y
+    else
+        shift_ball_y = target.y - (self.y + self.height)
+    end
+
     -- if the above aren't true, they're overlapping
-    return true
+    return true, shift_ball_x, shift_ball_y
 end
 
 --[[
