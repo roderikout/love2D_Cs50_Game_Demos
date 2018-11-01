@@ -16,12 +16,18 @@
 
 PlayState = Class{__includes = BaseState}
 
+--[[
+    We initialize what's in our PlayState via a state table that we pass between
+    states as we go from playing to serving.
+]]
 function PlayState:enter(params)
     self.paddle = params.paddle
     self.bricks = params.bricks
     self.health = params.health
     self.score = params.score
+    self.highScores = params.highScores
     self.ball = params.ball
+    self.level = params.level
 
     -- give ball random starting velocity
     self.ball.dx = math.random(-200, 200)
@@ -47,7 +53,7 @@ function PlayState:update(dt)
     self.ball:update(dt)
 
     if self.ball:collides(self.paddle) then
-        -- reverse Y velocity if collision detected between paddle and ball
+        -- raise ball above paddle in case it goes below it, then reverse dy
         self.ball.y = self.paddle.y - 8
         self.ball.dy = -self.ball.dy
 
@@ -59,7 +65,7 @@ function PlayState:update(dt)
         if self.ball.x < self.paddle.x + (self.paddle.width / 2) and self.paddle.dx < 0 then
             self.ball.dx = -50 + -(8 * (self.paddle.x + self.paddle.width / 2 - self.ball.x))
         
-            -- else if we hit the paddle on its right side while moving right...
+        -- else if we hit the paddle on its right side while moving right...
         elseif self.ball.x > self.paddle.x + (self.paddle.width / 2) and self.paddle.dx > 0 then
             self.ball.dx = 50 + (8 * math.abs(self.paddle.x + self.paddle.width / 2 - self.ball.x))
         end
@@ -79,6 +85,20 @@ function PlayState:update(dt)
             -- trigger the brick's hit function, which removes it from play
             brick:hit()
 
+            -- go to our victory screen if there are no more bricks left
+            if self:checkVictory() then
+                gSounds['victory']:play()
+
+                gStateMachine:change('victory', {
+                    level = self.level,
+                    paddle = self.paddle,
+                    health = self.health,
+                    score = self.score,
+                    highScores = self.highScores,
+                    ball = self.ball
+                })
+            end
+
             --
             -- collision code for bricks
             --
@@ -88,14 +108,16 @@ function PlayState:update(dt)
             -- colliding on the top or bottom accordingly 
             --
 
-            -- left edge; only check if we're moving right
+            -- left edge; only check if we're moving right, and offset the check by a couple of pixels
+            -- so that flush corner hits register as Y flips, not X flips
             if self.ball.x + 2 < brick.x and self.ball.dx > 0 then
                 
                 -- flip x velocity and reset position outside of brick
                 self.ball.dx = -self.ball.dx
                 self.ball.x = brick.x - 8
             
-            -- right edge; only check if we're moving left
+            -- right edge; only check if we're moving left, , and offset the check by a couple of pixels
+            -- so that flush corner hits register as Y flips, not X flips
             elseif self.ball.x + 6 > brick.x + brick.width and self.ball.dx < 0 then
                 
                 -- flip x velocity and reset position outside of brick
@@ -117,8 +139,10 @@ function PlayState:update(dt)
                 self.ball.y = brick.y + 16
             end
 
-            -- slightly scale the y velocity to speed up the game
-            self.ball.dy = self.ball.dy * 1.02
+            -- slightly scale the y velocity to speed up the game, capping at +- 150
+            if math.abs(self.ball.dy) < 150 then
+                self.ball.dy = self.ball.dy * 1.02
+            end
 
             -- only allow colliding with one brick, for corners
             break
@@ -132,16 +156,24 @@ function PlayState:update(dt)
 
         if self.health == 0 then
             gStateMachine:change('game-over', {
-                score = self.score
+                score = self.score,
+                highScores = self.highScores,
             })
         else
             gStateMachine:change('serve', {
                 paddle = self.paddle,
                 bricks = self.bricks,
                 health = self.health,
-                score = self.score
+                score = self.score,
+                highScores = self.highScores,
+                level = self.level
             })
         end
+    end
+
+    -- for rendering particle systems
+    for k, brick in pairs(self.bricks) do
+        brick:update(dt)
     end
 
     if love.keyboard.wasPressed('escape') then
@@ -155,15 +187,32 @@ function PlayState:render()
         brick:render()
     end
 
+    -- render all particle systems
+    for k, brick in pairs(self.bricks) do
+        brick:renderParticles()
+    end
+
     self.paddle:render()
     self.ball:render()
 
     renderScore(self.score)
     renderHealth(self.health)
+    renderLevel(self.level)
+    renderHighScore(self.highScores)
 
     -- pause text, if paused
     if self.paused then
         love.graphics.setFont(gFonts['large'])
         love.graphics.printf("PAUSED", 0, VIRTUAL_HEIGHT / 2 - 16, VIRTUAL_WIDTH, 'center')
     end
+end
+
+function PlayState:checkVictory()
+    for k, brick in pairs(self.bricks) do
+        if brick.inPlay then
+            return false
+        end 
+    end
+
+    return true
 end
