@@ -47,8 +47,6 @@ function PlayState:enter(params)
     --1: add balls to maximum 3 balls in play
     self.powerUpNumberOfBalls = 3
     self.ballsInGame = {self.ball}
-    self.timerToPowerUp1ToEnd = 0
-    self.secondsForPowerUp1ToEnd = 10
     self.paddleOriginalSkin = self.paddle.skin
 
     --power up timer and flags
@@ -62,7 +60,11 @@ end
 
 function PlayState:update(dt)
 
-    self.timer = self.timer + dt --timer for power up
+    if not self.isPowerUpActive then 
+        self.timer = self.timer + dt --timer for power up
+    else
+        self.timer = 0
+    end
 
     if self.paused then
         if love.keyboard.wasPressed('space') then
@@ -81,14 +83,12 @@ function PlayState:update(dt)
     if self.timer > self.secondsToPowerUp then
         self.waitingForBrick = true --time is passed now i'm waiting for brick position info
         if self.isBrickForPowerUp then --ask if I have the last hitted position info
-            if #self.powerUps < self.numPowerUps and not self.isPowerUpActive then
+            if #self.powerUps < self.numPowerUps then
                 self.powerUp.x = self.brickToPowerUpPositionX - self.powerUp.width / 2
                 self.powerUp.y = self.brickToPowerUpPositionY - self.powerUp.height / 2
                 self.powerUp.type = self.powerUpType
                 self.powerUp.dy = self.powerUpDy
                 table.insert(self.powerUps, self.powerUp)
-                self.timer = 0
-                self.secondsToPowerUp = math.random(3, 5)
                 self.waitingForBrick = false 
                 self.isBrickForPowerUp = false
             end
@@ -96,15 +96,6 @@ function PlayState:update(dt)
     end
     -- update positions based on velocity
     self.paddle:update(dt)
-
-    --timer to powerUpActive
-    if self.isPowerUpActive then
-        self.timerToPowerUp1ToEnd = self.timerToPowerUp1ToEnd + dt
-        if self.timerToPowerUp1ToEnd > self.secondsForPowerUp1ToEnd then
-            --self.isPowerUpActive = false
-            --self.timerToPowerUp1ToEnd = 0
-        end
-    end
 
     --remove power ups when collide with paddle and active it or only remove it when exit the screen
     for k, powerUp in pairs(self.powerUps) do
@@ -125,9 +116,6 @@ function PlayState:update(dt)
             end
          elseif powerUp.y > VIRTUAL_HEIGHT then
             table.remove(self.powerUps, k)
-            self.timer = 0
-            self.waitingForBrick = false
-            self.isBrickForPowerUp = false
         end
         powerUp:update(dt)
     end
@@ -161,11 +149,9 @@ function PlayState:update(dt)
             if shift_ball_y ~= 0 then
                 ball.dy = -ball.dy
             end
-
             --
             -- tweak angle of bounce based on where it hits the paddle
             --
-
             -- if we hit the paddle on its left side while moving left...
             if ball.x < self.paddle.x + (self.paddle.width / 2) and self.paddle.dx < 0 then
                 ball.dx = -50 + -(8 * (self.paddle.x + self.paddle.width / 2 - ball.x))
@@ -269,6 +255,7 @@ function PlayState:update(dt)
             elseif #self.ballsInGame == 1 then
                 self.isPowerUpActive = false
                 self.timer = 0
+                self.secondsToPowerUp = math.random(3, 5)
             end
 
             if self.health == 0 then
