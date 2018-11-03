@@ -139,41 +139,28 @@ function PlayState:update(dt)
             --
             -- collision code for bricks
             --
-            -- we check to see if the opposite side of our velocity is outside of the brick;
-            -- if it is, we trigger a collision on that side. else we're within the X + width of
-            -- the brick and should check to see if the top or bottom edge is outside of the brick,
-            -- colliding on the top or bottom accordingly 
-            --
+            --Nuevo rebote usando tecnica de noooway
+            local ball_collides, shift_ball_x, shift_ball_y, min_shift
+            ball_collides, shift_ball_x, shift_ball_y = self.ball:collides(brick)
 
-            -- left edge; only check if we're moving right, and offset the check by a couple of pixels
-            -- so that flush corner hits register as Y flips, not X flips
-            if self.ball.x + 2 < brick.x and self.ball.dx > 0 then
-                
-                -- flip x velocity and reset position outside of brick
-                self.ball.dx = -self.ball.dx
-                self.ball.x = brick.x - 8
-            
-            -- right edge; only check if we're moving left, , and offset the check by a couple of pixels
-            -- so that flush corner hits register as Y flips, not X flips
-            elseif self.ball.x + 6 > brick.x + brick.width and self.ball.dx < 0 then
-                
-                -- flip x velocity and reset position outside of brick
-                self.ball.dx = -self.ball.dx
-                self.ball.x = brick.x + 32
-            
-            -- top edge if no X collisions, always check
-            elseif self.ball.y < brick.y then
-                
-                -- flip y velocity and reset position outside of brick
-                self.ball.dy = -self.ball.dy
-                self.ball.y = brick.y - 8
-            
-            -- bottom edge if no X collisions or top collision, last possibility
+            min_shift = math.min(math.abs(shift_ball_x), math.abs(shift_ball_y))
+
+            if math.abs(shift_ball_x) == min_shift then
+                shift_ball_y = 0
             else
-                
-                -- flip y velocity and reset position outside of brick
+                shift_ball_x = 0
+            end
+
+
+            -- raise ball above paddle in case it goes below it, then reverse dy or the same for x and dx
+            self.ball.x = self.ball.x + shift_ball_x
+            self.ball.y = self.ball.y + shift_ball_y
+
+            if shift_ball_x ~= 0 then
+                self.ball.dx = -self.ball.dx
+            end
+            if shift_ball_y ~= 0 then
                 self.ball.dy = -self.ball.dy
-                self.ball.y = brick.y + 16
             end
 
             -- slightly scale the y velocity to speed up the game, capping at +- 150
