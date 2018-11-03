@@ -14,17 +14,17 @@
 
 PowerUp = Class{}
 
-function PowerUp:init(x, y)
+function PowerUp:init(x, y, type, dy)
     --types of power-ups, momentarly there is only one type, 1, that is
     --for putting two new balls in play at the same time
-    self.type = 1
+    self.type = type
 
     self.x = x
     self.y = y
     self.width = 16
     self.height = 16
 
-    self.dy = 20
+    self.dy = dy
 
     gSounds['confirm']:stop()
     gSounds['confirm']:play()
@@ -56,5 +56,4 @@ function PowerUp:render()
     -- gPowerUpFrames is a table of quads mapping to each individual ball skin in the texture
     love.graphics.draw(gTextures['main'], gFrames['powerups'][self.type],
         self.x, self.y)
-
 end

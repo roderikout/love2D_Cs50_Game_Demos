@@ -36,12 +36,23 @@ function PlayState:enter(params)
     self.ball.dy = math.random(-50, -60)
 
     -- power up table and maximum number
+    self.powerUp = PowerUp(0,0,1,0)
     self.powerUps = {}
-    self.numPowerUps = 1
+    self.numPowerUps = 1  --maximum of powerUps in screen at once
+    self.powerUpType = 1 
+    self.powerUpDy = 20  --velocity of powerUps falling
+    self.isPowerUpActive = false
+
+    --Types of powerUps:
+    --1: add balls to maximum 3 balls in play
+    self.powerUpNumberOfBalls = 3
+    self.timerToPowerUp1ToEnd = 0
+    self.secondsForPowerUp1ToEnd = 10
+    self.paddleOriginalSkin = self.paddle.skin
 
     --power up timer and flags
     self.timer = 0
-    self.secondsToPowerUp = 3
+    self.secondsToPowerUp = math.random(3, 5)
     self.isBrickForPowerUp = false --ask a brick if its hitted after seconds passed
     self.waitingForBrick = false  --announce brick that power up is waiting for position info
     self.brickToPowerUpPositionX = 0
@@ -69,9 +80,14 @@ function PlayState:update(dt)
     if self.timer > self.secondsToPowerUp then
         self.waitingForBrick = true --time is passed now i'm waiting for brick position info
         if self.isBrickForPowerUp then --ask if I have the last hitted position info
-            if #self.powerUps < self.numPowerUps then
-                table.insert(self.powerUps, PowerUp(self.brickToPowerUpPositionX, self.brickToPowerUpPositionY))
+            if #self.powerUps < self.numPowerUps and not self.isPowerUpActive then
+                self.powerUp.x = self.brickToPowerUpPositionX - self.powerUp.width / 2
+                self.powerUp.y = self.brickToPowerUpPositionY - self.powerUp.height / 2
+                self.powerUp.type = self.powerUpType
+                self.powerUp.dy = self.powerUpDy
+                table.insert(self.powerUps, self.powerUp)
                 self.timer = 0
+                self.secondsToPowerUp = math.random(3, 5)
                 self.waitingForBrick = false 
                 self.isBrickForPowerUp = false
             end
@@ -81,15 +97,32 @@ function PlayState:update(dt)
     self.paddle:update(dt)
     self.ball:update(dt)
 
-    --remove power ups when collide with paddle or when exit the screen
-    for k, pair in pairs(self.powerUps) do
-         if pair:collides(self.paddle) or pair.y > VIRTUAL_HEIGHT then
+    --timer to powerUpActive
+    if self.isPowerUpActive then
+        self.timerToPowerUp1ToEnd = self.timerToPowerUp1ToEnd + dt
+        if self.timerToPowerUp1ToEnd > self.secondsForPowerUp1ToEnd then
+            self.isPowerUpActive = false
+            self.timerToPowerUp1ToEnd = 0
+            self.paddle.skin = self.paddleOriginalSkin
+        end
+    end
+
+    --remove power ups when collide with paddle and active it or only remove it when exit the screen
+    for k, powerUp in pairs(self.powerUps) do
+         if powerUp:collides(self.paddle) then
             table.remove(self.powerUps, k)
             self.timer = 0
             self.waitingForBrick = false
             self.isBrickForPowerUp = false
-         end
-        pair:update(dt)
+            self.isPowerUpActive = true
+            self.paddle.skin = 2
+         elseif powerUp.y > VIRTUAL_HEIGHT then
+            table.remove(self.powerUps, k)
+            self.timer = 0
+            self.waitingForBrick = false
+            self.isBrickForPowerUp = false
+        end
+        powerUp:update(dt)
     end
 
     --Nuevo rebote usando tecnica de noooway
@@ -142,7 +175,7 @@ function PlayState:update(dt)
         if brick.inPlay and self.ball:collides(brick) then
 
             --power up is waiting for brick's position info
-            if self.waitingForBrick then
+            if self.waitingForBrick and not self.isPowerUpActive then
                 self.brickToPowerUpPositionX = brick.x + brick.width / 2
                 self.brickToPowerUpPositionY = brick.y + brick.height / 2
                 self.isBrickForPowerUp = true
@@ -242,6 +275,7 @@ function PlayState:update(dt)
                 highScores = self.highScores,
             })
         else
+            self.paddle.skin = self.paddleOriginalSkin
             gStateMachine:change('serve', {
                 paddle = self.paddle,
                 bricks = self.bricks,
@@ -277,10 +311,11 @@ function PlayState:render()
 
     self.paddle:render()
     self.ball:render()
+    self:displayDebugging()
 
     --rendering power ups
-    for k, pair in pairs(self.powerUps) do
-        pair:render()
+    for k, powerUp in pairs(self.powerUps) do
+        powerUp:render()
     end
 
     renderScore(self.score)
@@ -303,4 +338,12 @@ function PlayState:checkVictory()
     end
 
     return true
+end
+
+
+function PlayState:displayDebugging()
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print('IsPUActive: ' .. tostring(self.isPowerUpActive), 5, 5)
+    love.graphics.setColor(255, 255, 255, 255)
 end
