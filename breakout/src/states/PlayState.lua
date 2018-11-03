@@ -34,9 +34,24 @@ function PlayState:enter(params)
     -- give ball random starting velocity
     self.ball.dx = math.random(-200, 200)
     self.ball.dy = math.random(-50, -60)
+
+    -- power up table and maximum number
+    self.powerUps = {}
+    self.numPowerUps = 1
+
+    --power up timer and flags
+    self.timer = 0
+    self.secondsToPowerUp = 3
+    self.isBrickForPowerUp = false --ask a brick if its hitted after seconds passed
+    self.waitingForBrick = false  --announce brick that power up is waiting for position info
+    self.brickToPowerUpPositionX = 0
+    self.brickToPowerUpPositionY = 0
 end
 
 function PlayState:update(dt)
+
+    self.timer = self.timer + dt --timer for power up
+
     if self.paused then
         if love.keyboard.wasPressed('space') then
             self.paused = false
@@ -50,9 +65,32 @@ function PlayState:update(dt)
         return
     end
 
+    --power up conditions
+    if self.timer > self.secondsToPowerUp then
+        self.waitingForBrick = true --time is passed now i'm waiting for brick position info
+        if self.isBrickForPowerUp then --ask if I have the last hitted position info
+            if #self.powerUps < self.numPowerUps then
+                table.insert(self.powerUps, PowerUp(self.brickToPowerUpPositionX, self.brickToPowerUpPositionY))
+                self.timer = 0
+                self.waitingForBrick = false 
+                self.isBrickForPowerUp = false
+            end
+        end
+    end
     -- update positions based on velocity
     self.paddle:update(dt)
     self.ball:update(dt)
+
+    --remove power ups when collide with paddle or when exit the screen
+    for k, pair in pairs(self.powerUps) do
+         if pair:collides(self.paddle) or pair.y > VIRTUAL_HEIGHT then
+            table.remove(self.powerUps, k)
+            self.timer = 0
+            self.waitingForBrick = false
+            self.isBrickForPowerUp = false
+         end
+        pair:update(dt)
+    end
 
     --Nuevo rebote usando tecnica de noooway
 
@@ -102,6 +140,13 @@ function PlayState:update(dt)
 
         -- only check collision if we're in play
         if brick.inPlay and self.ball:collides(brick) then
+
+            --power up is waiting for brick's position info
+            if self.waitingForBrick then
+                self.brickToPowerUpPositionX = brick.x + brick.width / 2
+                self.brickToPowerUpPositionY = brick.y + brick.height / 2
+                self.isBrickForPowerUp = true
+            end
 
             -- add to score
             self.score = self.score + (brick.tier * 200 + brick.color * 25)
@@ -232,6 +277,11 @@ function PlayState:render()
 
     self.paddle:render()
     self.ball:render()
+
+    --rendering power ups
+    for k, pair in pairs(self.powerUps) do
+        pair:render()
+    end
 
     renderScore(self.score)
     renderHealth(self.health)
