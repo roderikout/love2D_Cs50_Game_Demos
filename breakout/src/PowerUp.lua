@@ -14,17 +14,18 @@
 
 PowerUp = Class{}
 
-function PowerUp:init(x, y, type, dy)
+function PowerUp:init(x, y, style, dy)
     --types of power-ups, momentarly there is only one type, 1, that is
     --for putting two new balls in play at the same time
-    self.type = type
+    self.style = style or 1
+    self.type = math.min(self.style, 10)
 
-    self.x = x
-    self.y = y
+    self.x = x or 0
+    self.y = y or 0
     self.width = 16
     self.height = 16
 
-    self.dy = dy
+    self.dy = dy or 20
 
     gSounds['confirm']:stop()
     gSounds['confirm']:play()

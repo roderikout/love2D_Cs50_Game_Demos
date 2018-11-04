@@ -24,6 +24,10 @@ require 'src/Ball'
 -- the entities in our game map that give us points when we collide with them
 require 'src/Brick'
 
+-- the power-up master and manager
+require 'src/PowerUp'
+require 'src/PowerUpGenerator'
+
 -- a class used to generate our brick layouts (levels)
 require 'src/LevelMaker'
 

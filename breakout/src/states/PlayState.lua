@@ -34,9 +34,28 @@ function PlayState:enter(params)
     -- give ball random starting velocity
     self.ball.dx = math.random(-200, 200)
     self.ball.dy = math.random(-50, -60)
+
+    -- timers for whatever (power-ups for example)
+    self.timerPowerUps = 0
+
+    -- Power-Up vars
+    self.powerUpGenerator = PowerUpGenerator()
+    self.isPowerUpTime = false
+    self.scoreNow = 0
 end
 
 function PlayState:update(dt)
+
+    self.timerPowerUps = self.timerPowerUps + dt
+
+
+    self.isPowerUpTime = self.powerUpGenerator:isTimeForPowerUp(math.floor(self.timerPowerUps))
+
+    if self.score > self.scoreNow and self.score % 175 == 0 and self.timerPowerUps > 10 then
+        self.powerUpGenerator:spawnPowerUp()
+        self.scoreNow = self.score
+    end
+
     if self.paused then
         if love.keyboard.wasPressed('space') then
             self.paused = false
@@ -102,6 +121,11 @@ function PlayState:update(dt)
 
         -- only check collision if we're in play
         if brick.inPlay and self.ball:collides(brick) then
+
+            --add power up at brick position
+            if self.isPowerUpTime then
+                self.powerUpGenerator:spawnPowerUp(brick.x + brick.width / 2, brick.y + brick.height / 2)
+            end
 
             -- add to score
             self.score = self.score + (brick.tier * 200 + brick.color * 25)
@@ -201,6 +225,9 @@ function PlayState:update(dt)
         brick:update(dt)
     end
 
+    --rendering Power Ups
+    self.powerUpGenerator:update(dt)
+
     if love.keyboard.wasPressed('escape') then
         love.event.quit()
     end
@@ -220,6 +247,8 @@ function PlayState:render()
     self.paddle:render()
     self.ball:render()
 
+    self.powerUpGenerator:render()
+
     renderScore(self.score)
     renderHealth(self.health)
     renderLevel(self.level)
@@ -230,6 +259,11 @@ function PlayState:render()
         love.graphics.setFont(gFonts['large'])
         love.graphics.printf("PAUSED", 0, VIRTUAL_HEIGHT / 2 - 16, VIRTUAL_WIDTH, 'center')
     end
+
+    --Display debuggers
+     displayDebug(15, 'Is funtcion working: ', self.isPowerUpTime)
+     displayDebug(25, 'Timer: ', math.floor(self.timerPowerUps))
+     displayDebug(30, 'Time4PUp: ', self.powerUpGenerator.timeForPowerUp)
 end
 
 function PlayState:checkVictory()

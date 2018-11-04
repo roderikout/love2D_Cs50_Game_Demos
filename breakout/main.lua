@@ -67,6 +67,7 @@ function love.load()
         ['bricks'] = GenerateQuadsBricks(gTextures['main']),
         ['hearts'] = GenerateQuads(gTextures['hearts'], 10, 9),
         ['arrows'] = GenerateQuads(gTextures['arrows'], 24, 24),
+        ['powerups'] = GenerateQuadsPowerUps(gTextures['main']),
     }
 
     -- initialize our virtual resolution, which will be rendered within our
@@ -308,4 +309,11 @@ function renderHighScore(highScores)
     love.graphics.printf('High score: ' .. tostring(highScores[1].name) 
         .. ' ' .. tostring(highScores[1].score), 0, VIRTUAL_HEIGHT -10,
         VIRTUAL_WIDTH, 'center')
+end
+
+function displayDebug(y, debugText, debugData)
+    -- simple FPS display across all states
+    love.graphics.setFont(gFonts['small'])
+    love.graphics.setColor(0, 255, 0, 255)
+    love.graphics.print(debugText .. tostring(debugData), 5, y)
 end
