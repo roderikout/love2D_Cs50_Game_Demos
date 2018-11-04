@@ -15,7 +15,7 @@ PowerUpGenerator = Class{}
 
 function PowerUpGenerator:init()
 
-	self.timeForPowerUp = math.random(15 , 35) --seconds
+	self.timeForPowerUp = math.random(5 , 8) --seconds
 
 	self.isTime = false
 
@@ -26,6 +26,9 @@ function PowerUpGenerator:init()
 	self.powerUp = PowerUp()
 
 	self.maxPowerUps = 1
+
+	self.paddle = {}
+
 end
 
 function PowerUpGenerator:isTimeForPowerUp(time)
@@ -51,7 +54,6 @@ end
 function PowerUpGenerator:update(dt)
 	for k, powerup in pairs(self.powerUps) do
 		powerup:update(dt)
-
 		if powerup.y >= VIRTUAL_HEIGHT then
 			table.remove(self.powerUps, k)
 		end
@@ -61,5 +63,14 @@ end
 function PowerUpGenerator:render()
 	for k, powerup in pairs(self.powerUps) do
 		powerup:render()
+	end
+end
+
+function PowerUpGenerator:collides(paddle)
+	for k, powerup in pairs(self.powerUps) do
+		if powerup:collides(paddle) then
+			table.remove(self.powerUps, k)
+			return true
+		end
 	end
 end
